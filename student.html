@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Tehzeeb Islamic English School</title>
+    
+    <!-- Auth Check -->
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            window.location.href = './index.html';
+        }
+    </script>
+
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- 3. Ionicons (for dashboard icons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+    <!-- 4. Tailwind Customization -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cream': '#FAF8F1',
+                        'dark-green': '#046307',
+                        'light-green': '#E6F8E7', // A lighter green for accents
+                        'alert-red': '#DC2626',
+                    },
+                    fontFamily: {
+                        heading: ['Playfair Display', 'serif'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 5. Custom CSS for Dashboard -->
+    <style>
+        /* Apply base fonts */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Sidebar active state */
+        .nav-link.active {
+            background-color: #FAF8F1; /* cream */
+            color: #046307; /* dark-green */
+            font-weight: 600;
+        }
+
+        /* Hide content sections by default */
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+
+        /* Custom scrollbar for content area */
+        .main-content::-webkit-scrollbar { width: 8px; }
+        .main-content::-webkit-scrollbar-track { background: #FAF8F1; }
+        .main-content::-webkit-scrollbar-thumb {
+            background: #c4c4c4;
+            border-radius: 4px;
+        }
+        .main-content::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+
+        /* Attendance Calendar Styling */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px; /* Reduced gap for smaller screens */
+        }
+        .calendar-day-head {
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.75rem; /* Smaller font */
+            color: #374151; /* gray-700 */
+        }
+        .calendar-day {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 40px; /* Smaller height */
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        .calendar-day.other-month {
+            background-color: transparent;
+            color: #9ca3af; /* gray-400 */
+        }
+        .calendar-day-dot {
+            position: absolute;
+            bottom: 4px; /* Adjusted position */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px; /* Smaller dot */
+            height: 6px; /* Smaller dot */
+            border-radius: 50%;
+        }
+        .dot-present { background-color: #16a34a; } /* green-600 */
+        .dot-absent { background-color: #dc2626; } /* red-600 */
+
+        /* Make table scrollbars slightly more visible */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 4px; /* Make it subtle */
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #a1a1a1;
+            border-radius: 2px;
+        }
+
+        /* Smooth scrolling */
+        * {
+            scroll-behavior: smooth;
+        }
+
+        .overflow-y-auto {
+            scroll-behavior: smooth;
+        }
+
+        /* Ensure header always covers full width */
+        header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100vw !important;
+            min-width: 100vw !important;
+            max-width: 100vw !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Remove any constraints from body and containers */
+        body {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .flex.h-screen {
+            overflow-x: hidden !important;
+        }
+
+    </style>
+    
+    <!-- 6. JavaScript for Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Existing selectors
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const quickActionButtons = document.querySelectorAll('.nav-link-btn');
+            const headerTitle = document.getElementById('header-title');
+
+            // --- New Mobile Menu Selectors ---
+            const sidebar = document.getElementById('sidebar');
+            const menuToggleBtn = document.getElementById('menu-toggle-btn');
+            const menuCloseBtn = document.getElementById('menu-close-btn');
+
+            // --- New Mobile Menu Listeners ---
+            if (menuToggleBtn) {
+                menuToggleBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                });
+            }
+            if (menuCloseBtn) {
+                menuCloseBtn.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                });
+            }
+
+            // --- Main Section Switching Logic ---
+            function switchSection(targetId) {
+                // Hide all content sections
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+
+                // Deactivate all nav links
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+
+                // Show the target content section
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+
+                // Activate the target nav link
+                const targetLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+                if (targetLink) {
+                    targetLink.classList.add('active');
+                    // Update header title
+                    if (headerTitle) {
+                        headerTitle.textContent = targetLink.querySelector('span').textContent;
+                    }
+                }
+            }
+
+            // Click handler for sidebar navigation
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('data-target');
+                    switchSection(targetId);
+
+                    // --- New: Close menu on nav click (mobile) ---
+                    if (window.innerWidth < 768) { // md breakpoint
+                        sidebar.classList.add('-translate-x-full');
+                    }
+                });
+            });
+
+            // Click handler for quick action buttons on dashboard (if any)
+            quickActionButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = button.getAttribute('data-target');
+                    switchSection(targetId);
+                });
+            });
+
+            // Set initial header title based on active link
+            const activeLink = document.querySelector('.nav-link.active');
+            if (activeLink && headerTitle) {
+                headerTitle.textContent = activeLink.querySelector('span').textContent;
+            }
+        });
+    </script>
+</head>
+<body class="bg-cream overflow-x-hidden">
+    <!-- Header moved outside main container for full width -->
+    <header class="bg-white shadow-md p-6 flex justify-between items-center fixed top-0 left-0 right-0 z-[60] w-screen">
+        <button id="menu-toggle-btn" class="text-dark-green text-3xl md:hidden">
+            <ion-icon name="menu-outline"></ion-icon>
+        </button>
+        <h1 id="header-title" class="text-2xl font-heading text-dark-green hidden md:block">Dashboard</h1>
+        <div class="flex items-center gap-4">
+            <span class="text-sm font-medium text-gray-700">Welcome, Rohan</span>
+            <img src="https://placehold.co/40x40/046307/FAF8F1?text=S" alt="Student" class="w-10 h-10 rounded-full border-2 border-dark-green">
+        </div>
+    </header>
+
+    <div class="flex h-screen bg-white">
+        <!-- Sidebar -->
+        <!-- UPDATED: Added classes for mobile responsiveness -->
+        <aside id="sidebar" class="w-64 bg-dark-green text-cream flex flex-col shadow-2xl fixed inset-y-0 left-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+            <!-- Logo -->
+            <!-- UPDATED: Added close button for mobile -->
+            <div class="flex items-center justify-between p-6 border-b border-green-700">
+                <img src="school_logo.png" alt="School Logo" class="w-24">
+                <!-- Close button (visible on mobile) -->
+                <button id="menu-close-btn" class="text-cream text-3xl md:hidden">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav id="sidebar-nav" class="flex-1 p-4 space-y-2">
+                <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="dashboard-section">
+                    <ion-icon name="grid-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Dashboard</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="attendance-section">
+                    <ion-icon name="checkmark-done-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Attendance Record</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="query-section">
+                    <ion-icon name="chatbubble-ellipses-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Ask a Query</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="schedule-section">
+                    <ion-icon name="calendar-number-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Weekly Schedule</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="curriculum-section">
+                    <ion-icon name="book-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Curriculum</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="profile-section">
+                    <ion-icon name="person-circle-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Student Profile</span>
+                </a>
+            </nav>
+
+            <!-- Logout -->
+            <div class="p-4 border-t border-green-700">
+                <a href="index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-cream/70 hover:bg-cream hover:text-dark-green transition-all" id="logout-link">
+                    <ion-icon name="log-out-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <!-- UPDATED: Added w-full to fix mobile layout -->
+        <div class="flex-1 flex flex-col w-full">
+            <!-- Content -->
+            <main class="flex-1 p-4 md:p-8 bg-cream overflow-y-auto main-content pt-24">
+                
+                <!-- Section 1: Dashboard (Default) -->
+                <section id="dashboard-section" class="content-section active space-y-6 md:space-y-8">
+                    <!-- Notifications & Alerts -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Notifications & Alerts</h3>
+                        <div class="space-y-4">
+                            <!-- Urgent Alert Example -->
+                            <div class="flex items-start gap-4 p-4 bg-red-100 border-l-4 border-alert-red rounded-lg">
+                                <ion-icon name="warning-outline" class="text-2xl text-alert-red flex-shrink-0"></ion-icon>
+                                <div>
+                                    <h4 class="font-semibold text-alert-red">Attendance Alert: Absent</h4>
+                                    <p class="text-sm text-gray-700">Rohan Sharma was marked **absent** from Maths (Class 8) today, Nov 5, 2025.</p>
+                                </div>
+                            </div>
+                            <!-- Standard Notice Example -->
+                            <div class="flex items-start gap-4 p-4 bg-light-green/50 border-l-4 border-dark-green rounded-lg">
+                                <ion-icon name="megaphone-outline" class="text-2xl text-dark-green flex-shrink-0"></ion-icon>
+                                <div>
+                                    <h4 class="font-semibold text-dark-green">New Notice: Art Competition</h4>
+                                    <p class="text-sm text-gray-700">The rules for the annual Art Competition have been posted. Check the Curriculum section for details.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- At a Glance Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Pending Queries</h3>
+                            <p class="text-4xl font-bold text-gray-800 mt-2">1</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Days Absent (This Month)</h3>
+                            <p class="text-4xl font-bold text-alert-red mt-2">1</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Next Exam</h3>
+                            <p class="text-2xl font-bold text-gray-800 mt-2">Mathematics</p>
+                            <p class="text-md text-gray-600">Nov 10, 2025</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Attendance Record -->
+                <section id="attendance-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Attendance Record (November 2025)</h2>
+                    
+                    <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                        <!-- Legend -->
+                        <div class="flex flex-wrap justify-center gap-4 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-4 h-4 rounded-full bg-green-600"></span>
+                                <span class="text-sm">Present</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-4 h-4 rounded-full bg-red-600"></span>
+                                <span class="text-sm">Absent</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-4 h-4 rounded-full bg-gray-400"></span>
+                                <span class="text-sm">Holiday</span>
+                            </div>
+                        </div>
+
+                        <!-- Calendar Grid -->
+                        <div class="calendar-grid">
+                            <!-- Headers -->
+                            <div class="calendar-day-head">Sun</div>
+                            <div class="calendar-day-head">Mon</div>
+                            <div class="calendar-day-head">Tue</div>
+                            <div class="calendar-day-head">Wed</div>
+                            <div class="calendar-day-head">Thu</div>
+                            <div class="calendar-day-head">Fri</div>
+                            <div class="calendar-day-head">Sat</div>
+                            
+                            <!-- Days (Demo for Nov 2025) -->
+                            <div class="calendar-day other-month">27</div>
+                            <div class="calendar-day other-month">28</div>
+                            <div class="calendar-day other-month">29</div>
+                            <div class="calendar-day other-month">30</div>
+                            <div class="calendar-day other-month">31</div>
+                            <div class="calendar-day">1 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">2 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">3 <span class="calendar-day-dot dot-present"></span></div>
+                            <div class="calendar-day">4 <span class="calendar-day-dot dot-present"></span></div>
+                            <div class="calendar-day">5 <span class="calendar-day-dot dot-absent"></span></div>
+                            <div class="calendar-day">6</div>
+                            <div class="calendar-day">7</div>
+                            <div class="calendar-day">8 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">9 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">10</div>
+                            <div class="calendar-day">11</div>
+                            <div class="calendar-day">12</div>
+                            <div class="calendar-day">13</div>
+                            <div class="calendar-day">14</div>
+                            <div class="calendar-day">15 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">16 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">17</div>
+                            <div class="calendar-day">18</div>
+                            <div class="calendar-day">19</div>
+                            <div class="calendar-day">20</div>
+                            <div class="calendar-day">21</div>
+                            <div class="calendar-day">22 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">23 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">24</div>
+                            <div class="calendar-day">25</div>
+                            <div class="calendar-day">26</div>
+                            <div class="calendar-day">27</div>
+                            <div class="calendar-day">28</div>
+                            <div class="calendar-day">29 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                            <div class="calendar-day">30 <span class="calendar-day-dot" style="background-color: #9ca3af;"></span></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Ask a Query -->
+                <section id="query-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Ask a Query</h2>
+
+                    <!-- New Query Form -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Submit a New Query</h3>
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="query-teacher" class="block text-sm font-medium text-gray-700">Select Teacher</label>
+                                    <select id="query-teacher" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                        <option>Fatima Ahmed (Maths)</option>
+                                        <option>Mr. Ibrahim Ali (Science)</option>
+                                        <option>Aisha Begum (English)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="query-subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                    <input type="text" id="query-subject" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" placeholder="e.g., Algebra Doubt">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="query-message" class="block text-sm font-medium text-gray-700">Your Question</label>
+                                <textarea id="query-message" rows="5" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" placeholder="Dear Teacher, I have a question about..."></textarea>
+                            </div>
+                            <button type="submit" class="bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Send Query
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Query History -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">My Query History</h3>
+                        <ul class="space-y-4">
+                            <li class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-light-green/50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold text-gray-800">Science - Photosynthesis</p>
+                                    <p class="text-sm text-gray-600">To: Mr. Ibrahim Ali</p>
+                                </div>
+                                <span class="text-sm font-medium text-green-700 bg-green-100 py-1 px-3 rounded-full mt-2 sm:mt-0 self-start sm:self-center">Answered</span>
+                            </li>
+                            <li class="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-light-green/50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold text-gray-800">English - Essay Submission</p>
+                                    <p class="text-sm text-gray-600">To: Aisha Begum</p>
+                                </div>
+                                <span class="text-sm font-medium text-yellow-700 bg-yellow-100 py-1 px-3 rounded-full mt-2 sm:mt-0 self-start sm:self-center">Pending</span>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Section 4: Weekly Schedule -->
+                <section id="schedule-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">My Weekly Schedule</h2>
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <p class="text-gray-700 mb-4">This is the weekly schedule for Class 8. This schedule is managed by the admin.</p>
+                        
+                        <!-- Timetable Display -->
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-light-green/30">
+                            <h3 class="font-heading text-2xl text-dark-green mb-4">Timetable: Class 8</h3>
+                            <img src="https://placehold.co/800x600/E6F8E7/046307?text=Class+8+Timetable" alt="Weekly Timetable" class="w-full rounded-lg">
+                            <a href="#" class="inline-block mt-4 bg-dark-green text-white py-2 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Curriculum -->
+                <section id="curriculum-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">School Curriculum</h2>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <p class="text-gray-700 mb-4">View and download all academic and non-academic curriculum files.</p>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[600px]">
+                                <thead class="border-b-2 border-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">File Name</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Class</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Type</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Class 8 Maths Syllabus.pdf</td>
+                                        <td class="py-3 px-4">Class 8</td>
+                                        <td class="py-3 px-4">Academic</td>
+                                        <td class="py-3 px-4">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Download"><ion-icon name="download-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Art Competition Rules.pdf</td>
+                                        <td class="py-3 px-4">All</td>
+                                        <td class="py-3 px-4">Non-Academic</td>
+                                        <td class="py-3 px-4">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Download"><ion-icon name="download-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: Student Profile -->
+                <section id="profile-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Student Profile</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Profile Info Card -->
+                        <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-2xl text-dark-green mb-4">Student Information</h3>
+                            <form class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                                        <input type="text" value="Rohan Sharma" readonly class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                                        <input type="email" value="rohan.sharma@email.com" readonly class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Class</label>
+                                        <input type="text" value="Class 8" readonly class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Parent's Name</label>
+                                        <input type="text" value="Mr. Vijay Sharma" readonly class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600">Please contact the admin office to update your information.</p>
+                            </form>
+                        </div>
+
+                        <!-- Change Password Card -->
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-2xl text-dark-green mb-4">Change Password</h3>
+                            <form class="space-y-4">
+                                <div>
+                                    <label for="new-pass" class="block text-sm font-medium text-gray-700">New Password</label>
+                                    <input type="password" id="new-pass" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                                </div>
+                                <div>
+                                    <label for="confirm-pass" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                                    <input type="password" id="confirm-pass" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                                </div>
+                                <button type="submit" class="w-full bg-blue-600 text-white py-3 px-5 rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md">
+                                    Set New Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+</body>
+</html>
