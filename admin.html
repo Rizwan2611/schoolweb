@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Tehzeeb Islamic English School</title>
+    
+    <!-- Navigation -->
+    <nav class="bg-dark-green text-white p-4 md:hidden">
+        <div class="container mx-auto flex justify-between items-center">
+            <span class="text-xl font-heading">Admin Dashboard</span>
+            <a href="index.html" class="hover:text-cream">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Auth Check -->
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            // UPDATED: Changed to a more robust URL replacement method
+            window.location.href = window.location.href.replace(window.location.pathname.split('/').pop(), 'index.html');
+        }
+    </script>
+
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- 3. Heroicons (for dashboard icons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+    <!-- 4. Tailwind Customization -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cream': '#FAF8F1',
+                        'dark-green': '#046307',
+                        'light-green': '#E6F8E7', // A lighter green for accents
+                    },
+                    fontFamily: {
+                        heading: ['Playfair Display', 'serif'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 5. Custom CSS for Dashboard -->
+    <style>
+        /* Apply base fonts */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Sidebar active state */
+        .nav-link.active {
+            background-color: #FAF8F1; /* cream */
+            color: #046307; /* dark-green */
+            font-weight: 600;
+        }
+
+        /* Hide content sections by default */
+        .content-section {
+            display: none;
+        }
+        /* Show the active section */
+        .content-section.active {
+            display: block;
+        }
+
+        /* Simple file input styling */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-input-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        
+        /* Custom scrollbar for content area */
+        .main-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .main-content::-webkit-scrollbar-track {
+            background: #FAF8F1; /* cream */
+        }
+        .main-content::-webkit-scrollbar-thumb {
+            background: #c4c4c4;
+            border-radius: 4px;
+        }
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* Make table scrollbars slightly more visible */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 4px; /* Make it subtle */
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #a1a1a1;
+            border-radius: 2px;
+        }
+
+        /* Smooth scrolling */
+        * {
+            scroll-behavior: smooth;
+        }
+
+        .overflow-y-auto {
+            scroll-behavior: smooth;
+        }
+
+        /* Ensure header always covers full width */
+        header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100vw !important;
+            min-width: 100vw !important;
+            max-width: 100vw !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Remove any constraints from body and containers */
+        body {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .flex.h-screen {
+            overflow-x: hidden !important;
+        }
+
+    </style>
+</head>
+<body class="bg-cream overflow-x-hidden">
+    <!-- Header moved outside main container for full width -->
+    <header class="bg-white shadow-md p-6 flex justify-between items-center fixed top-0 left-0 right-0 z-[60] w-screen">
+        <button id="menu-toggle-btn" class="text-dark-green text-3xl md:hidden">
+            <ion-icon name="menu-outline"></ion-icon>
+        </button>
+        <h1 id="header-title" class="text-2xl font-heading text-dark-green hidden md:block">Admin Dashboard</h1>
+        <div class="flex items-center gap-4">
+            <span class="text-sm font-medium text-gray-700">Welcome, Admin!</span>
+            <img src="https://placehold.co/40x40/046307/FAF8F1?text=A" alt="Admin" class="w-10 h-10 rounded-full border-2 border-dark-green">
+        </div>
+    </header>
+
+    <div class="flex h-screen bg-white">
+        <!-- Sidebar -->
+        <!-- UPDATED: Added classes for mobile responsiveness -->
+        <aside id="sidebar" class="w-64 bg-dark-green text-cream flex flex-col shadow-2xl fixed inset-y-0 left-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+            <!-- Logo -->
+            <!-- UPDATED: Added close button for mobile -->
+            <div class="flex items-center justify-between p-6 border-b border-green-700">
+                <img src="school_logo.png" alt="School Logo" class="w-24">
+                <!-- Close button (visible on mobile) -->
+                <button id="menu-close-btn" class="text-cream text-3xl md:hidden">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav id="sidebar-nav" class="flex-1 p-4 space-y-2">
+                <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="dashboard-section">
+                    <ion-icon name="grid-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Dashboard</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="curriculum-section">
+                    <ion-icon name="book-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Curriculum</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="notices-section">
+                    <ion-icon name="megaphone-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Important Notices</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="exams-section">
+                    <ion-icon name="calendar-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Exam Schedules</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="timetables-section">
+                    <ion-icon name="calendar-number-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Weekly Timetables</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all" data-target="users-section">
+                    <ion-icon name="people-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Manage Users</span>
+                </a>
+            </nav>
+
+            <!-- Logout -->
+            <div class="p-4 border-t border-green-700">
+                <a href="index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-cream/70 hover:bg-cream hover:text-dark-green transition-all" id="logout-link">
+                    <ion-icon name="log-out-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Content -->
+            <main class="flex-1 p-4 md:p-8 bg-cream overflow-y-auto main-content pt-24">
+                
+                <!-- Section 1: Dashboard (Default) -->
+                <section id="dashboard-section" class="content-section active space-y-6 md:space-y-8">
+                    <!-- At a Glance Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Total Students</h3>
+                            <p class="text-4xl font-bold text-gray-800 mt-2">450</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Total Teachers</h3>
+                            <p class="text-4xl font-bold text-gray-800 mt-2">32</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Pending Queries</h3>
+                            <p class="text-4xl font-bold text-red-600 mt-2">8</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Card -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Quick Actions</h3>
+                        <div class="flex flex-wrap gap-4">
+                            <button class="nav-link-btn bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md" data-target="notices-section">
+                                + Post New Notice
+                            </button>
+                            <button class="nav-link-btn bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md" data-target="exams-section">
+                                + Add Exam Schedule
+                            </button>
+                            <button class="nav-link-btn bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md" data-target="curriculum-section">
+                                + Upload Curriculum
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Manage Curriculum (RESTORED) -->
+                <section id="curriculum-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Manage Curriculum</h2>
+                    
+                    <!-- Upload Card -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Upload New File</h3>
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="title" class="block text-sm font-medium text-gray-700">File Title</label>
+                                    <input type="text" id="title" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" placeholder="e.g., Class 8 Maths Syllabus">
+                                </div>
+                                <div>
+                                    <label for="class" class="block text-sm font-medium text-gray-700">Class</label>
+                                    <select id="class" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                        <option>Class 5</option>
+                                        <option>Class 6</option>
+                                        <option>Class 7</option>
+                                        <option>Class 8</option>
+                                        <option>Class 9</option>
+                                        <option>Class 10</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Type</label>
+                                <div class="flex gap-4 mt-2">
+                                    <label class="flex items-center gap-2"><input type="radio" name="type" value="academic" class="focus:ring-dark-green text-dark-green" checked> Academic</label>
+                                    <label class="flex items-center gap-2"><input type="radio" name="type" value="non-academic" class="focus:ring-dark-green text-dark-green"> Non-Academic</label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">File</label>
+                                <div class="mt-1 file-input-wrapper">
+                                    <input type="file" id="curriculum-file-upload" accept=".pdf,.doc,.docx,.png,.jpg">
+                                    <span class="file-input-btn bg-white text-dark-green py-2 px-4 rounded-lg border-2 border-dashed border-dark-green hover:bg-light-green transition-all">
+                                        <ion-icon name="cloud-upload-outline"></ion-icon>
+                                        <span id="curriculum-file-name">Click to browse</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="submit" class="bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Upload File
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Existing Files List -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Existing Curriculum</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[600px]">
+                                <thead class="border-b-2 border-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">File Name</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Class</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Type</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Class 8 Maths Syllabus.pdf</td>
+                                        <td class="py-3 px-4">Class 8</td>
+                                        <td class="py-3 px-4">Academic</td>
+                                        <td class="py-3 px-4 flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Edit"><ion-icon name="create-outline"></ion-icon></button>
+                                            <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Art Competition Rules.pdf</td>
+                                        <td class="py-3 px-4">All</td>
+                                        <td class="py-3 px-4">Non-Academic</td>
+                                        <td class="py-3 px-4 flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Edit"><ion-icon name="create-outline"></ion-icon></button>
+                                            <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Important Notices (RESTORED) -->
+                <section id="notices-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Important Notices</h2>
+                    
+                    <!-- Post Notice Card -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Post a New Notice</h3>
+                        <form class="space-y-4">
+                            <div>
+                                <label for="notice-title" class="block text-sm font-medium text-gray-700">Notice Title</label>
+                                <input type="text" id="notice-title" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" placeholder="e.g., School Holiday">
+                            </div>
+                            <div>
+                                <label for="notice-message" class="block text-sm font-medium text-gray-700">Message</label>
+                                <textarea id="notice-message" rows="4" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" placeholder="Enter the full notice details..."></textarea>
+                            </div>
+                            <button type="submit" class="bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Post Notice
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Recent Notices -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Recent Notices</h3>
+                        <ul class="space-y-4">
+                            <li class="flex justify-between items-center p-4 bg-light-green/50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold text-gray-800">Parent-Teacher Meeting</p>
+                                    <p class="text-sm text-gray-600">Posted on: 2025-11-04</p>
+                                </div>
+                                <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline" class="text-xl"></ion-icon></button>
+                            </li>
+                            <li class="flex justify-between items-center p-4 bg-light-green/50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold text-gray-800">Holiday: Annual Sports Day</p>
+                                    <p class="text-sm text-gray-600">Posted on: 2025-11-02</p>
+                                </div>
+                                <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline" class="text-xl"></ion-icon></button>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Section 4: Exam Schedules (RESTORED) -->
+                <section id="exams-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Exam Schedules</h2>
+
+                    <!-- Add Exam Card -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Add New Exam</h3>
+                        <form class="space-y-4 md:space-y-0 md:flex md:gap-4 md:items-end">
+                            <div class="flex-1">
+                                <label for="exam-class" class="block text-sm font-medium text-gray-700">Class</label>
+                                <select id="exam-class" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                    <option>Class 5</option>
+                                    <option>Class 6</option>
+                                    <option>Class 7</option>
+                                    <option>Class 8</option>
+                                    <option>Class 9</option>
+                                    <option>Class 10</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label for="exam-subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                                <input type="text" id="exam-subject" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" placeholder="e.g., Mathematics">
+                            </div>
+                            <div class="flex-1">
+                                <label for="exam-date" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="exam-date" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                            </div>
+                            <div class="flex-1">
+                                <label for="exam-time" class="block text-sm font-medium text-gray-700">Time</label>
+                                <input type="time" id="exam-time" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                            </div>
+                            <button type="submit" class="w-full md:w-auto bg-dark-green text-white py-2 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md h-10">
+                                Add
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Upcoming Exams List -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Upcoming Exams</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[700px]">
+                                <thead class="border-b-2 border-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Date</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Time</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Class</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Subject</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">2025-11-10</td>
+                                        <td class="py-3 px-4">09:00 AM</td>
+                                        <td class="py-3 px-4">Class 8</td>
+                                        <td class="py-3 px-4">Mathematics</td>
+                                        <td class="py-3 px-4 flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Edit"><ion-icon name="create-outline"></ion-icon></button>
+                                            <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">2025-11-12</td>
+                                        <td class="py-3 px-4">10:00 AM</td>
+                                        <td class="py-3 px-4">Class 8</td>
+                                        <td class="py-3 px-4">Science</td>
+                                        <td class="py-3 px-4 flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Edit"><ion-icon name="create-outline"></ion-icon></button>
+                                            <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Weekly Timetables (Already present) -->
+                <section id="timetables-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Manage Weekly Timetables</h2>
+                    
+                    <!-- Upload/Update Card -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Upload / Update Timetable</h3>
+                        <p class="text-sm text-gray-600 mb-4">Upload a PDF or image file for a class's weekly schedule. Uploading for a class that already has a schedule will replace the old one.</p>
+                        
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="timetable-class" class="block text-sm font-medium text-gray-700">Class</label>
+                                    <select id="timetable-class" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                        <option value="">Select a Class</option>
+                                        <option>Class 5</option>
+                                        <option>Class 6</option>
+                                        <option>Class 7</option>
+                                        <option>Class 8</option>
+                                        <option>Class 9</option>
+                                        <option>Class 10</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Timetable File (PDF or Image)</label>
+                                    <div class="mt-1 file-input-wrapper">
+                                        <input type="file" id="timetable-file-upload" accept=".pdf,.jpg,.jpeg,.png">
+                                        <span class="file-input-btn bg-white text-dark-green py-2 px-4 rounded-lg border-2 border-dashed border-dark-green hover:bg-light-green transition-all">
+                                            <ion-icon name="cloud-upload-outline"></ion-icon>
+                                            <span id="timetable-file-name">Click to browse</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Upload Timetable
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Current Timetables List -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Current Timetables</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[700px]">
+                                <thead class="border-b-2 border-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Class</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">File Name</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Last Updated</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Class 8</td>
+                                        <td class="py-3 px-4">class_8_schedule.pdf</td>
+                                        <td class="py-3 px-4">2025-11-03</td>
+                                        <td class="py-3 px-4 flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Update"><ion-icon name="create-outline"></ion-icon></button>
+                                            <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Class 7</td>
+                                        <td class="py-3 px-4">class_7_schedule.png</td>
+                                        <td class="py-3 px-4">2025-11-02</td>
+                                        <td class="py-3 px-4 flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Update"><ion-icon name="create-outline"></ion-icon></button>
+                                            <button class="text-red-600 hover:text-red-800" title="Delete"><ion-icon name="trash-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: Manage Users (Placeholder) -->
+                <section id="users-section" class="content-section">
+                    <h2 class="text-3xl font-heading text-dark-green">Manage Users</h2>
+                    <p class="mt-4 text-gray-700">User management section (for adding/deleting teachers, students, and parents) will be built here.</p>
+
+                    <!-- Student Photo Upload (Visible in Manage Users) -->
+                    <section id="student-photo-upload-section" class="content-section active space-y-8">
+                      <h2 class="text-2xl font-bold mb-4">Upload Student Photo</h2>
+                      <form id="studentPhotoForm" enctype="multipart/form-data" class="flex flex-col gap-3 w-full max-w-md">
+                        <label>Student ID
+                          <input type="number" name="student_id" class="border p-2 rounded w-full" required />
+                        </label>
+                        <label>Standard
+                          <input type="text" name="standard" class="border p-2 rounded w-full" required />
+                        </label>
+                        <label>Section
+                          <select name="section" class="border p-2 rounded w-full" required>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </select>
+                        </label>
+                        <label>Photo
+                          <input type="file" name="photo" accept="image/*" capture="environment" class="border p-2 rounded w-full" required />
+                        </label>
+                        <button type="submit" class="bg-dark-green text-white py-2 rounded">Upload Photo</button>
+                        <div id="admin-upload-result" class="mt-2 text-green-700"></div>
+                      </form>
+                    </section>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 6. JavaScript for Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Existing selectors
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const quickActionButtons = document.querySelectorAll('.nav-link-btn');
+            const headerTitle = document.getElementById('header-title'); // Get header title
+
+            // --- New Mobile Menu Selectors ---
+            const sidebar = document.getElementById('sidebar');
+            const menuToggleBtn = document.getElementById('menu-toggle-btn');
+            const menuCloseBtn = document.getElementById('menu-close-btn');
+
+            // --- New Mobile Menu Listeners ---
+            if (menuToggleBtn) {
+                menuToggleBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                });
+            }
+            if (menuCloseBtn) {
+                menuCloseBtn.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                });
+            }
+
+            // --- Section Switching ---
+            function switchSection(targetId) {
+                // Hide all content sections
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+
+                // Deactivate all nav links
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+
+                // Show the target content section
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+
+                // Activate the target nav link
+                const targetLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+                if (targetLink) {
+                    targetLink.classList.add('active');
+                    // UPDATED: Also update header title
+                    headerTitle.textContent = targetLink.querySelector('span').textContent;
+                }
+            }
+
+            // Click handler for sidebar navigation
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('data-target');
+                    switchSection(targetId);
+
+                    // --- New: Close menu on nav click (mobile) ---
+                    if (window.innerWidth < 768) { // md breakpoint
+                        sidebar.classList.add('-translate-x-full');
+                    }
+                });
+            });
+
+            // Click handler for quick action buttons on dashboard
+            quickActionButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = button.getAttribute('data-target');
+                    switchSection(targetId);
+                });
+            });
+
+            // --- File input name display (Timetable) ---
+            const timetableFileInput = document.getElementById('timetable-file-upload');
+            const timetableFileName = document.getElementById('timetable-file-name');
+
+            if (timetableFileInput) {
+                timetableFileInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        timetableFileName.textContent = e.target.files[0].name;
+                    } else {
+                        timetableFileName.textContent = 'Click to browse';
+                    }
+                });
+            }
+
+            // --- File input name display (Curriculum - RESTORED) ---
+            const curriculumFileInput = document.getElementById('curriculum-file-upload');
+            const curriculumFileName = document.getElementById('curriculum-file-name');
+
+            if (curriculumFileInput) {
+                curriculumFileInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        curriculumFileName.textContent = e.target.files[0].name;
+                    } else {
+                        curriculumFileName.textContent = 'Click to browse';
+                    }
+                });
+            }
+
+            // Admin: Upload Student Photo
+            const studentPhotoForm = document.getElementById('studentPhotoForm');
+            if (studentPhotoForm) {
+              studentPhotoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(studentPhotoForm);
+                const studentId = formData.get('student_id');
+                const resultDiv = document.getElementById('admin-upload-result');
+                resultDiv.textContent = 'Uploading...';
+                try {
+                  const res = await fetch(`/admin/students/${studentId}/upload_photo`, {
+                    method: 'POST',
+                    body: formData
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    resultDiv.textContent = 'Photo uploaded successfully!';
+                  } else {
+                    resultDiv.textContent = data.error || 'Upload failed.';
+                  }
+                } catch (err) {
+                  resultDiv.textContent = 'Error uploading photo.';
+                }
+              });
+            }
+
+            // Set initial header title based on active link
+            const activeLink = document.querySelector('.nav-link.active');
+            if (activeLink) {
+                headerTitle.textContent = activeLink.querySelector('span').textContent;
+            }
+        });
+    </script>
+</body>
+</html>
