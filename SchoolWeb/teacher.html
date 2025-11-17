@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard | Tehzeeb Islamic English School</title>
+    
+    <!-- Navigation -->
+    <!-- UPDATED: Hide on medium screens and up -->
+    <nav class="bg-dark-green text-white p-4 md:hidden">
+        <div class="container mx-auto flex justify-between items-center">
+            <span class="text-xl font-heading">Teacher Dashboard</span>
+            <a href="./index.html" class="hover:text-cream">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Auth Check -->
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            window.location.href = './index.html';
+        }
+    </script>
+
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- 3. Ionicons (for dashboard icons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+    <!-- 4. Tailwind Customization -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cream': '#FAF8F1',
+                        'dark-green': '#046307',
+                        'light-green': '#E6F8E7', // A lighter green for accents
+                    },
+                    fontFamily: {
+                        heading: ['Playfair Display', 'serif'],
+                        body: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 5. Custom CSS for Dashboard -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .nav-link.active {
+            background-color: #FAF8F1;
+            color: #046307;
+            font-weight: 600;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .main-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: #FAF8F1;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: #c4c4c4;
+            border-radius: 4px;
+        }
+
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        #camera-border {
+            border: 8px solid #9ca3af;
+            border-radius: 1.25rem;
+            background-color: #333;
+            transition: border-color 0.5s ease;
+        }
+
+        #camera-feed {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 1rem;
+        }
+
+        .query-list-item.active {
+            background-color: #E6F8E7;
+        }
+
+        .chat-bubble-student {
+            background-color: #f3f4f6;
+            align-self: flex-start;
+        }
+
+        .chat-bubble-teacher {
+            background-color: #E6F8E7;
+            align-self: flex-end;
+        }
+
+        .roster-status {
+            font-weight: 600;
+        }
+
+        .roster-pending {
+            color: #6b7280;
+        }
+
+        .roster-present {
+            color: #16a34a;
+        }
+
+        .roster-absent {
+            color: #dc2626;
+        }
+
+        /* Make table scrollbars slightly more visible */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 4px; /* Make it subtle */
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #a1a1a1;
+            border-radius: 2px;
+        }
+
+        /* Smooth scrolling */
+        * {
+            scroll-behavior: smooth;
+        }
+
+        .overflow-y-auto {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Enhanced smooth scrolling for webkit browsers */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Ensure header always covers full width */
+        header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100vw !important;
+            min-width: 100vw !important;
+            max-width: 100vw !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+        }
+
+        /* Keep header internal padding */
+        header .p-6 {
+            padding: 1.5rem !important;
+        }
+
+        /* Remove any constraints from body and containers */
+        body {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .flex.h-screen {
+            overflow-x: hidden !important;
+        }
+
+    </style>
+</head>
+
+<body class="bg-cream overflow-x-hidden">
+    <!-- Header moved outside main container for full width -->
+    <header class="bg-white shadow-md p-6 flex justify-between items-center fixed top-0 left-0 right-0 z-[60] w-screen">
+        <button id="menu-toggle-btn" class="text-dark-green text-3xl md:hidden">
+            <ion-icon name="menu-outline"></ion-icon>
+        </button>
+        <h1 id="header-title" class="text-2xl font-heading text-dark-green hidden md:block">Dashboard</h1>
+        <div class="flex items-center gap-4">
+            <span class="text-sm font-medium text-gray-700">Welcome, Teacher!</span>
+            <img src="https://placehold.co/40x40/046307/FAF8F1?text=T" alt="Teacher"
+                class="w-10 h-10 rounded-full border-2 border-dark-green">
+        </div>
+    </header>
+
+    <div class="flex h-screen bg-white">
+        <!-- Sidebar -->
+        <!-- UPDATED: Added classes for mobile responsiveness -->
+        <aside id="sidebar" class="w-64 bg-dark-green text-cream flex flex-col shadow-2xl fixed inset-y-0 left-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+            <!-- Logo -->
+            <!-- UPDATED: Added close button for mobile -->
+            <div class="flex items-center justify-between p-6 border-b border-green-700">
+                <img src="school_logo.png" alt="School Logo" class="w-24">
+                <!-- Close button (visible on mobile) -->
+                <button id="menu-close-btn" class="text-cream text-3xl md:hidden">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav id="sidebar-nav" class="flex-1 p-4 space-y-2">
+                <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-target="dashboard-section">
+                    <ion-icon name="grid-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Dashboard</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-target="attendance-section">
+                    <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Attendance</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-target="queries-section">
+                    <ion-icon name="chatbubbles-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Student Queries</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-target="schedule-section">
+                    <ion-icon name="calendar-number-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">My Schedule</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-target="curriculum-section">
+                    <ion-icon name="book-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Curriculum</span>
+                </a>
+                <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-target="profile-section">
+                    <ion-icon name="person-circle-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">My Profile</span>
+                </a>
+            </nav>
+
+            <!-- Logout -->
+            <div class="p-4 border-t border-green-700">
+                <a href="index.html" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-cream/70 hover:bg-cream hover:text-dark-green transition-all" id="logout-link">
+                    <ion-icon name="log-out-outline" class="text-2xl"></ion-icon>
+                    <span class="text-sm">Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Content -->
+            <main class="flex-1 p-4 md:p-8 bg-cream overflow-y-auto main-content pt-24">
+
+                <!-- Section 1: Dashboard (Default) -->
+                <section id="dashboard-section" class="content-section active space-y-6 md:space-y-8">
+                    <!-- ... existing dashboard content ... -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Pending Queries</h3>
+                            <p class="text-4xl font-bold text-red-600 mt-2">5</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Today's Classes</h3>
+                            <p class="text-4xl font-bold text-gray-800 mt-2">3</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-xl text-dark-green">Next Class (Maths - 8)</h3>
+                            <p class="text-4xl font-bold text-gray-800 mt-2">10:00 AM</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Quick Actions</h3>
+                        <div class="flex flex-wrap gap-4">
+                            <button
+                                class="nav-link-btn bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md"
+                                data-target="attendance-section">
+                                <ion-icon name="camera-outline" class="mr-2"></ion-icon> Start Attendance Scan
+                            </button>
+                            <button
+                                class="nav-link-btn bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md"
+                                data-target="queries-section">
+                                <ion-icon name="chatbubbles-outline" class="mr-2"></ion-icon> View Student Queries
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Attendance (Combined) -->
+                <section id="attendance-section" class="content-section space-y-6 md:space-y-8">
+                    <h2 class="text-3xl font-heading text-dark-green">Attendance</h2>
+                    
+                    <!-- Part 1: Upload Photo (Fallback) -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="font-heading text-2xl text-dark-green mb-4">Upload Class Photo (Fallback)</h3>
+                        <p class="text-gray-700 mb-4">If you are unable to use the live scanner, you can upload a photo of the class here for attendance processing.</p>
+                        <form id="classPhotoForm" enctype="multipart/form-data" class="flex flex-col gap-4 w-full max-w-md">
+                            <div>
+                                <label for="class_id_upload" class="block text-sm font-medium text-gray-700">Class ID</label>
+                                <input type="number" name="class_id" id="class_id_upload" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green" required />
+                            </div>
+                            <div>
+                                <label for="photo_upload" class="block text-sm font-medium text-gray-700">Photo</label>
+                                <input type="file" name="photo" id="photo_upload" accept="image/*" capture="environment" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-light-green file:text-dark-green hover:file:bg-light-green/80" required />
+                            </div>
+                            <button type="submit" class="bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md self-start">
+                                Upload Class Photo
+                            </button>
+                            <div id="teacher-upload-result" class="mt-2 text-lg font-medium"></div>
+                        </form>
+                    </div>
+        
+                    <!-- Divider -->
+                    <hr class="border-t-2 border-gray-200 my-8">
+        
+                    <!-- Part 2: Live Scanner (Whole Class) -->
+                    <div>
+                        <h3 class="font-heading text-2xl text-dark-green mb-6">Live Attendance Scanner (Whole Class)</h3>
+                        <!-- UPDATED: Scanner Controls -->
+                        <div class="bg-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row gap-4 items-end">
+                            <div class="flex-1 min-w-[150px]">
+                                <label for="attendance-standard" class="block text-sm font-medium text-gray-700">1. Select
+                                    Standard</label>
+                                <select id="attendance-standard"
+                                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                    <option value="">-- Select Standard --</option>
+                                    <option value="class-5">Class 5</option>
+                                    <option value="class-6">Class 6</option>
+                                    <option value="class-7">Class 7</option>
+                                    <option value="class-8">Class 8</option>
+                                    <option value="class-9">Class 9</option>
+                                    <option value="class-10">Class 10</option>
+                                </select>
+                            </div>
+                            <!-- NEW: Select Section -->
+                            <div class="flex-1 min-w-[150px]">
+                                <label for="attendance-section-select" class="block text-sm font-medium text-gray-700">2. Select
+                                    Section</label>
+                                <select id="attendance-section-select"
+                                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                    <option value="">-- Select Section --</option>
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-[150px]">
+                                <label for="attendance-subject" class="block text-sm font-medium text-gray-700">3. Select
+                                    Subject</label>
+                                <select id="attendance-subject"
+                                    class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                    <option>-- Select Subject --</option>
+                                    <option>Maths - 09:00 AM</option>
+                                    <option>Science - 10:00 AM</option>
+                                    <option>English - 11:00 AM</option>
+                                    <option>History - 01:00 PM</option>
+                                    <option>Geography - 02:00 PM</option>
+                                    <option>Computer Science - 03:00 PM</option>
+                                </select>
+                            </div>
+                            <!-- REMOVED: Select Student -->
+                            <button id="start-camera-btn"
+                                class="w-full md:w-auto bg-dark-green text-white py-2 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Start Camera
+                            </button>
+                        </div>
+        
+                        <!-- Camera Feed and Roster -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                                <h3 class="font-heading text-2xl text-dark-green mb-4">Live Feed</h3>
+                                <div id="camera-border">
+                                    <video id="camera-feed" autoplay playsinline muted></video>
+                                </div>
+                                <p id="camera-status" class="text-center text-gray-600 mt-4 font-medium text-lg">Camera is
+                                    off.</p>
+                            </div>
+        
+                            <div class="bg-white p-6 rounded-2xl shadow-lg">
+                                <h3 class="font-heading text-2xl text-dark-green mb-4">Class Roster</h3>
+                                <ul id="roster-list" class="space-y-3 h-96 overflow-y-auto pr-2">
+                                    <li class="text-gray-500 text-center">Please select a standard to see the roster.</li>
+                                    <!-- Roster items will be populated by JS -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Student Queries -->
+                <section id="queries-section" class="content-section">
+                    <!-- ... existing queries content ... -->
+                    <h2 class="text-3xl font-heading text-dark-green mb-6">Student Queries</h2>
+                    <div class="flex flex-col md:flex-row h-[70vh] bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div class="w-full md:w-1/3 border-r border-gray-200 overflow-y-auto">
+                            <div class="p-4 border-b border-gray-200">
+                                <input type="text" placeholder="Search queries..."
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                            </div>
+                            <ul id="query-list">
+                                <li
+                                    class="query-list-item active p-4 border-b border-gray-200 cursor-pointer hover:bg-light-green/50 transition-all">
+                                    <h4 class="font-semibold text-gray-900">Rohan Sharma (Class 8)</h4>
+                                    <p class="text-sm text-dark-green font-medium truncate">Subject: Maths - Algebra
+                                        Doubt</p>
+                                    <p class="text-sm text-gray-600 truncate">Sir, I don't understand question 5 on page
+                                        42...</p>
+                                </li>
+                                <li
+                                    class="query-list-item p-4 border-b border-gray-200 cursor-pointer hover:bg-light-green/50 transition-all">
+                                    <h4 class="font-semibold text-gray-900">Priya Singh (Class 8)</h4>
+                                    <p class="text-sm text-dark-green font-medium truncate">Subject: Science -
+                                        Photosynthesis</p>
+                                    <p class="text-sm text-gray-600 truncate">Ma'am, what is the exact formula for...
+                                    </p>
+                                </li>
+                                <li
+                                    class="query-list-item p-4 border-b border-gray-200 cursor-pointer hover:bg-light-green/50 transition-all">
+                                    <h4 class="font-semibold text-gray-900">Ali Mirza (Class 7)</h4>
+                                    <p class="text-sm text-dark-green font-medium truncate">Subject: English - Essay
+                                        Submission</p>
+                                    <p class="text-sm text-gray-600 truncate">Can I get an extension for the essay?</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="flex-1 flex flex-col">
+                            <div class="p-4 border-b border-gray-200">
+                                <h3 class="text-xl font-heading text-dark-green">Rohan Sharma (Class 8)</h3>
+                                <p class="text-sm text-gray-600">Subject: Maths - Algebra Doubt</p>
+                            </div>
+                            <div class="flex-1 p-6 space-y-4 overflow-y-auto">
+                                <div class="chat-bubble-student p-4 rounded-lg max-w-xs">
+                                    <p class="text-sm">Sir, I don't understand question 5 on page 42. Can you please
+                                        explain the second step again?</p>
+                                    <span class="text-xs text-gray-500 block text-right mt-1">10:30 AM</span>
+                                </div>
+                                <div class="chat-bubble-teacher p-4 rounded-lg max-w-xs">
+                                    <p class="text-sm">Hello Rohan. Of course. The second step involves factoring the
+                                        common term 2a from the expression. Look at it this way: 2a*b + 2a*c = 2a(b+c).
+                                    </p>
+                                    <span class="text-xs text-gray-500 block text-right mt-1">10:35 AM</span>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-gray-50 border-t border-gray-200">
+                                <div class="flex gap-4">
+                                    <textarea rows="2"
+                                        class="flex-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green"
+                                        placeholder="Type your reply..."></textarea>
+                                    <button
+                                        class="bg-dark-green text-white py-2 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                        Send
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: My Schedule (Read-Only) -->
+                <section id="schedule-section" class="content-section space-y-6 md:space-y-8">
+                    <!-- ... existing schedule content ... -->
+                    <h2 class="text-3xl font-heading text-dark-green">My Weekly Schedule</h2>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <p class="text-gray-700 mb-4">This is your teaching schedule for the week. This schedule is
+                            managed by the admin. Please contact the administration for any changes.</p>
+                        <div class="mb-4">
+                            <label for="schedule-class" class="block text-sm font-medium text-gray-700">View Schedule
+                                for:</label>
+                            <select id="schedule-class"
+                                class="mt-1 w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green bg-white">
+                                <option>My Full Schedule</option>
+                                <option>Class 5</option>
+                                <option>Class 6</option>
+                                <option>Class 7</option>
+                                <option>Class 8</option>
+                                <option>Class 9</option>
+                                <option>Class 10</option>
+                            </select>
+                        </div>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-light-green/30">
+                            <h3 class="font-heading text-2xl text-dark-green mb-4">Timetable: My Full Schedule</h3>
+                            <img src="https://placehold.co/800x600/E6F8E7/046307?text=Weekly+Timetable+Image"
+                                alt="Weekly Timetable" class="w-full rounded-lg">
+                            <a href="#"
+                                class="inline-block mt-4 bg-dark-green text-white py-2 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Curriculum (Read-Only) -->
+                <section id="curriculum-section" class="content-section space-y-6 md:space-y-8">
+                    <!-- ... existing curriculum content ... -->
+                    <h2 class="text-3xl font-heading text-dark-green">View Curriculum</h2>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <p class="text-gray-700 mb-4">Here you can view and download all academic and non-academic
+                            curriculum files.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left min-w-[600px]">
+                                <thead class="border-b-2 border-gray-200">
+                                    <tr>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">File Name</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Class</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Type</th>
+                                        <th class="py-2 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Class 8 Maths Syllabus.pdf</td>
+                                        <td class="py-3 px-4">Class 8</td>
+                                        <td class="py-3 px-4">Academic</td>
+                                        <td class="py-3 px-4">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Download"><ion-icon
+                                                    name="download-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100">
+                                        <td class="py-3 px-4">Art Competition Rules.pdf</td>
+                                        <td class="py-3 px-4">All</td>
+                                        <td class="py-3 px-4">Non-Academic</td>
+                                        <td class="py-3 px-4">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Download"><ion-icon
+                                                    name="download-outline"></ion-icon></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: My Profile -->
+                <section id="profile-section" class="content-section space-y-6 md:space-y-8">
+                    <!-- ... existing profile content ... -->
+                    <h2 class="text-3xl font-heading text-dark-green">My Profile</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-2xl text-dark-green mb-4">My Information</h3>
+                            <form class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                                        <input type="text" value="Fatima Ahmed"
+                                            class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                                        <input type="email" value="fatima@tehzeeb.school" readonly
+                                            class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">My Subject</label>
+                                        <input type="text" value="Mathematics" readonly
+                                            class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Class Teacher (if
+                                            any)</label>
+                                        <input type="text" value="Class 8" readonly
+                                            class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                                    </div>
+                                </div>
+                                <button type="submit"
+                                    class="bg-dark-green text-white py-3 px-5 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md">
+                                    Update Profile
+                                </button>
+                            </form>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-heading text-2xl text-dark-green mb-4">Change Password</h3>
+                            <form class="space-y-4">
+                                <div>
+                                    <label for="new-pass" class="block text-sm font-medium text-gray-700">New
+                                        Password</label>
+                                    <input type="password" id="new-pass"
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                                </div>
+                                <div>
+                                    <label for="confirm-pass" class="block text-sm font-medium text-gray-700">Confirm
+                                        New Password</label>
+                                    <input type="password" id="confirm-pass"
+                                        class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-dark-green focus:border-dark-green">
+                                </div>
+                                <button type="submit"
+                                    class="w-full bg-blue-600 text-white py-3 px-5 rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md">
+                                    Set New Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+                
+            </main>
+        </div>
+    </div>
+
+    <!-- 6. JavaScript for Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Existing selectors
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const quickActionButtons = document.querySelectorAll('.nav-link-btn');
+            const headerTitle = document.getElementById('header-title');
+
+            // --- New Mobile Menu Selectors ---
+            const sidebar = document.getElementById('sidebar');
+            const menuToggleBtn = document.getElementById('menu-toggle-btn');
+            const menuCloseBtn = document.getElementById('menu-close-btn');
+
+            // --- Global variables for live scanner ---
+            let isCameraOn = false;
+
+            // --- New Mobile Menu Listeners ---
+            if (menuToggleBtn) {
+                menuToggleBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                });
+            }
+            if (menuCloseBtn) {
+                menuCloseBtn.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                });
+            }
+
+
+            // --- Main Section Switching Logic ---
+            function switchSection(targetId) {
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+                const targetLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+                if (targetLink) {
+                    targetLink.classList.add('active');
+                    headerTitle.textContent = targetLink.querySelector('span').textContent;
+                }
+                // Stop the camera if we navigate away
+                if (targetId !== 'attendance-section' && isCameraOn) {
+                    stopLiveView();
+                }
+            }
+
+            // --- FIXED: Added correct event listeners ---
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('data-target');
+                    switchSection(targetId);
+
+                    // --- New: Close menu on nav click (mobile) ---
+                    if (window.innerWidth < 768) { // md breakpoint
+                        sidebar.classList.add('-translate-x-full');
+                    }
+                });
+            });
+
+            quickActionButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = button.getAttribute('data-target');
+                    switchSection(targetId);
+                });
+            });
+            
+            // Set initial header title based on active link
+            const activeLink = document.querySelector('.nav-link.active');
+            if (activeLink) {
+                headerTitle.textContent = activeLink.querySelector('span').textContent;
+            }
+
+            // --- Demo Student Data ---
+            const demoStudentsByClass = {
+                'class-5': [
+                    { name: 'Ahmed Ali', id: 'st-00301' },
+                    { name: 'Sara Baig', id: 'st-00302' },
+                ],
+                'class-6': [
+                    { name: 'Fatima Ali', id: 'st-00201' },
+                    { name: 'David Lee', id: 'st-00202' },
+                ],
+                'class-7': [
+                    { name: 'Zoya Ahmed', id: 'st-00156' },
+                    { name: 'Sameer Kumar', id: 'st-00109' },
+                ],
+                'class-8': [
+                    { name: 'Aisha Khan', id: 'st-00123' },
+                    { name: 'Rohan Sharma', id: 'st-00145' },
+                    { name: 'Priya Singh', id: 'st-00112' },
+                    { name: 'Ali Mirza', id: 'st-00133' },
+                ],
+                'class-9': [
+                    { name: 'Imran Khan', id: 'st-00401' },
+                    { name: 'Ananya Verma', id: 'st-00402' },
+                ],
+                'class-10': [
+                    { name: 'Yusuf Pathan', id: 'st-00501' },
+                    { name: 'Mariam Siddiqui', id: 'st-00502' },
+                ]
+            };
+
+            // --- Populate Roster (for Live Scanner) ---
+            const standardSelect = document.getElementById('attendance-standard');
+            const rosterList = document.getElementById('roster-list');
+
+            if (standardSelect) {
+                standardSelect.addEventListener('change', () => {
+                    const selectedClass = standardSelect.value;
+                    rosterList.innerHTML = ''; // Clear roster
+
+                    if (selectedClass && demoStudentsByClass[selectedClass]) {
+                        // Populate Roster List
+                        demoStudentsByClass[selectedClass].forEach(student => {
+                            const li = document.createElement('li');
+                            li.dataset.studentId = student.id;
+                            li.className = 'flex justify-between items-center p-3 bg-light-green/50 rounded-lg';
+                            li.innerHTML = `
+                                <span>${student.name}</span>
+                                <span class="roster-status roster-pending">Pending</span>
+                            `;
+                            rosterList.appendChild(li);
+                        });
+                    } else {
+                        rosterList.innerHTML = '<li class="text-gray-500 text-center">Please select a standard to see the roster.</li>';
+                    }
+                });
+            }
+
+
+            // --- UPDATED: Live Attendance Camera Logic (Whole Class) ---
+            const startCameraBtn = document.getElementById('start-camera-btn');
+            const videoFeed = document.getElementById('camera-feed');
+            const cameraStatus = document.getElementById('camera-status');
+            const cameraBorder = document.getElementById('camera-border');
+            const sectionSelect = document.getElementById('attendance-section-select');
+
+            async function startLiveView() {
+                const standard = standardSelect.value;
+                const section = sectionSelect.value;
+
+                if (!standard || !section) {
+                    cameraStatus.textContent = "Please select Standard and Section first.";
+                    return;
+                }
+
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        cameraStatus.textContent = `Requesting camera access...`;
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        videoFeed.srcObject = stream;
+
+                        isCameraOn = true;
+                        startCameraBtn.textContent = "Take Picture";
+                        cameraStatus.textContent = `Align class in frame and take picture.`;
+                        cameraBorder.style.borderColor = '#3b82f6'; // blue-500
+
+                    } catch (err) {
+                        console.error("Error accessing camera: ", err);
+                        cameraStatus.textContent = "Could not access camera. Please check permissions.";
+                    }
+                } else {
+                    cameraStatus.textContent = "Camera access is not supported by this browser.";
+                }
+            }
+
+            function stopLiveView() {
+                if (videoFeed.srcObject) {
+                    videoFeed.srcObject.getTracks().forEach(track => track.stop());
+                    videoFeed.srcObject = null;
+                }
+                isCameraOn = false;
+                startCameraBtn.textContent = "Start Camera";
+                cameraStatus.textContent = "Camera is off.";
+                cameraBorder.style.borderColor = '#9ca3af'; // gray-400
+            }
+
+            async function takeClassPhoto() {
+                const standard = standardSelect.value;
+                const section = sectionSelect.value;
+                cameraStatus.textContent = `Processing photo for ${standard} - ${section}...`;
+                cameraBorder.style.borderColor = '#f59e0b'; // yellow-500
+
+                // In a real app:
+                // 1. const canvas = document.createElement('canvas');
+                // 2. canvas.width = videoFeed.videoWidth;
+                // 3. canvas.height = videoFeed.videoHeight;
+                // 4. canvas.getContext('2d').drawImage(videoFeed, 0, 0);
+                // 5. canvas.toBlob(blob => { upload(blob) }, 'image/jpeg');
+                // 6. upload() would be a fetch POST request.
+
+                // Simulate processing delay
+                await new Promise(resolve => setTimeout(resolve, 2500));
+                
+                // Simulate marking the roster
+                markAllStudents();
+
+                // Stop camera after processing
+                stopLiveView();
+            }
+
+            function markAllStudents() {
+                const rosterItems = rosterList.querySelectorAll('li');
+                if (rosterItems.length === 0 || rosterItems[0].dataset.studentId === undefined) {
+                    cameraStatus.textContent = "Roster is empty. Cannot mark attendance.";
+                    cameraBorder.style.borderColor = '#dc2626'; // red-600
+                    return;
+                }
+
+                let presentCount = 0;
+                rosterItems.forEach(item => {
+                    const statusEl = item.querySelector('.roster-status');
+                    // Simulate 90% presence
+                    const isPresent = Math.random() < 0.9;
+                    
+                    if (isPresent) {
+                        statusEl.textContent = 'Present';
+                        statusEl.className = 'roster-status roster-present';
+                        presentCount++;
+                    } else {
+                        statusEl.textContent = 'Absent';
+                        statusEl.className = 'roster-status roster-absent';
+                    }
+                });
+
+                cameraStatus.textContent = `Attendance marked for ${rosterItems.length} students. ${presentCount} present.`;
+                cameraBorder.style.borderColor = '#16a34a'; // green-600
+            }
+
+
+            if (startCameraBtn) {
+                startCameraBtn.addEventListener('click', () => {
+                    if (isCameraOn) {
+                        takeClassPhoto();
+                    } else {
+                        startLiveView();
+                    }
+                });
+            }
+
+            // --- Student Query Chat Logic (Demo) ---
+            const queryListItems = document.querySelectorAll('.query-list-item');
+            queryListItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    queryListItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    console.log("Loading chat for: " + item.querySelector('h4').textContent);
+                });
+            });
+
+            // --- Teacher: Upload Class Photo (Fallback) ---
+            const classPhotoForm = document.getElementById('classPhotoForm');
+            const resultDiv = document.getElementById('teacher-upload-result');
+            
+            if (classPhotoForm) {
+                classPhotoForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(classPhotoForm);
+                    const classId = formData.get('class_id');
+                    
+                    resultDiv.textContent = 'Uploading...';
+                    resultDiv.className = 'mt-2 text-lg font-medium text-gray-600';
+
+                    try {
+                        // SIMULATE API CALL
+                        console.log("Simulating upload for class:", classId, formData.get('photo'));
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+
+                        const data = { message: 'Class photo uploaded! Attendance processing...' };
+                        resultDiv.textContent = data.message;
+                        resultDiv.className = 'mt-2 text-lg font-medium text-green-700';
+                        classPhotoForm.reset();
+
+                    } catch (err) {
+                        resultDiv.textContent = 'Error uploading class photo.';
+                        resultDiv.className = 'mt-2 text-lg font-medium text-red-600';
+                        console.error('Upload error:', err);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
